@@ -89,7 +89,7 @@ fn simplify_expression(expression: &Expression) -> Expression {
             }]
         } else {
             let like_terms = collect_like_terms(&expression.terms);
-            like_terms
+            let mut terms = like_terms
                 .iter()
                 .map(|terms| {
                     let amount: f64 = terms
@@ -116,7 +116,33 @@ fn simplify_expression(expression: &Expression) -> Expression {
                     }
                 })
                 .map(|term| simplify_term(&term))
-                .collect()
+                .collect::<Vec<_>>();
+            let mut i = 0;
+            while i < terms.len() {
+                let term = &mut terms[i];
+                if let Some(group) = term
+                    .atoms
+                    .iter()
+                    .enumerate()
+                    .find_map(|(i, atom)| atom.is_group().then_some(i))
+                {
+                    let mut atoms = term.atoms.clone();
+                    let group = atoms.remove(group).into_group().unwrap();
+                    terms.append(
+                        &mut group
+                            .terms
+                            .iter()
+                            .map(|term| Term {
+                                atoms: term.atoms.iter().chain(atoms.iter()).cloned().collect(),
+                            })
+                            .collect(),
+                    );
+                    terms.remove(i);
+                } else {
+                    i = i + 1;
+                }
+            }
+            terms
         },
     }
 }
@@ -175,37 +201,74 @@ fn simplify_equation(equation: &Equation) -> Equation {
             };
             if left.terms.len() == 1 {
                 let term = &left.terms[0];
-                let amount: f64 = term
-                    .atoms
-                    .iter()
-                    .filter_map(|atom| (!atom.contains_variable()).then(|| eval_atom(atom)))
-                    .product();
-                let other_atoms = term
-                    .atoms
-                    .iter()
-                    .filter(|atom| atom.contains_variable())
-                    .cloned()
-                    .collect::<Vec<_>>();
-                Equation::Equality {
-                    left: Expression {
-                        terms: vec![Term { atoms: other_atoms }],
-                    },
-                    right: if amount != 1.0 {
-                        Expression {
+                if let Some(fraction) = term.atoms.iter().enumerate().find_map(|(i, atom)| {
+                    atom.as_fraction()
+                        .map(|(_, denominator)| (!denominator.contains_variable()).then_some(i))
+                        .flatten()
+                }) {
+                    let mut other_atoms = term.atoms.clone();
+                    other_atoms.remove(fraction);
+                    Equation::Equality {
+                        left: Expression {
                             terms: vec![Term {
-                                atoms: vec![Atom::Fraction {
-                                    numerator: right,
-                                    denominator: Expression {
-                                        terms: vec![Term {
-                                            atoms: vec![Atom::Number(amount)],
-                                        }],
-                                    },
-                                }],
+                                atoms: other_atoms
+                                    .into_iter()
+                                    .chain(std::iter::once(Atom::Group(
+                                        term.atoms[fraction].as_fraction().unwrap().0.clone(),
+                                    )))
+                                    .collect(),
                             }],
-                        }
-                    } else {
-                        right
-                    },
+                        },
+                        right: Expression {
+                            terms: right
+                                .terms
+                                .iter()
+                                .map(|t| Term {
+                                    atoms: t
+                                        .atoms
+                                        .iter()
+                                        .cloned()
+                                        .chain(std::iter::once(Atom::Group(
+                                            term.atoms[fraction].as_fraction().unwrap().1.clone(),
+                                        )))
+                                        .collect(),
+                                })
+                                .collect(),
+                        },
+                    }
+                } else {
+                    let amount: f64 = term
+                        .atoms
+                        .iter()
+                        .filter_map(|atom| (!atom.contains_variable()).then(|| eval_atom(atom)))
+                        .product();
+                    let other_atoms = term
+                        .atoms
+                        .iter()
+                        .filter(|atom| atom.contains_variable())
+                        .cloned()
+                        .collect::<Vec<_>>();
+                    Equation::Equality {
+                        left: Expression {
+                            terms: vec![Term { atoms: other_atoms }],
+                        },
+                        right: if amount != 1.0 {
+                            Expression {
+                                terms: vec![Term {
+                                    atoms: vec![Atom::Fraction {
+                                        numerator: right,
+                                        denominator: Expression {
+                                            terms: vec![Term {
+                                                atoms: vec![Atom::Number(amount)],
+                                            }],
+                                        },
+                                    }],
+                                }],
+                            }
+                        } else {
+                            right
+                        },
+                    }
                 }
             } else {
                 Equation::Equality { left, right }
