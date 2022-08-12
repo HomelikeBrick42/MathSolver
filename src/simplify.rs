@@ -1,3 +1,5 @@
+use num_rational::BigRational;
+
 use crate::{eval_atom, eval_expression, eval_term, Atom, Equation, Expression, Term};
 
 fn simplify_atom(atom: &Atom) -> Atom {
@@ -31,20 +33,20 @@ fn simplify_term(term: &Term) -> Term {
     Term {
         atoms: if !term.contains_variable() {
             vec![Atom::Number(eval_term(term))]
-        } else if term
-            .atoms
-            .iter()
-            .any(|atom| atom.as_number().map_or(false, |number| number == &0.0))
-        {
-            vec![Atom::Number(0.0)]
+        } else if term.atoms.iter().any(|atom| {
+            atom.as_number().map_or(false, |number| {
+                number == &BigRational::from_float(0.0).unwrap()
+            })
+        }) {
+            vec![Atom::Number(BigRational::from_float(0.0).unwrap())]
         } else {
-            let amount: f64 = term
+            let amount: BigRational = term
                 .atoms
                 .iter()
                 .filter_map(|atom| (!atom.contains_variable()).then(|| eval_atom(atom)))
                 .product();
             let other_atoms = term.atoms.iter().filter(|atom| atom.contains_variable());
-            if amount == 1.0 {
+            if amount == BigRational::from_float(1.0).unwrap() {
                 other_atoms.map(simplify_atom).collect()
             } else {
                 std::iter::once(&Atom::Number(amount))
@@ -92,9 +94,9 @@ fn simplify_expression(expression: &Expression) -> Expression {
             let mut terms = like_terms
                 .iter()
                 .map(|terms| {
-                    let amount: f64 = terms
+                    let amount: BigRational = terms
                         .iter()
-                        .map::<f64, _>(|term| {
+                        .map::<BigRational, _>(|term| {
                             term.atoms
                                 .iter()
                                 .filter_map(|atom| {
@@ -170,7 +172,9 @@ fn simplify_equation(equation: &Equation) -> Equation {
                                             .atoms
                                             .iter()
                                             .cloned()
-                                            .chain(std::iter::once(Atom::Number(-1.0)))
+                                            .chain(std::iter::once(Atom::Number(
+                                                BigRational::from_float(-1.0).unwrap(),
+                                            )))
                                             .collect(),
                                     }),
                             )
@@ -191,7 +195,9 @@ fn simplify_equation(equation: &Equation) -> Equation {
                                             .atoms
                                             .iter()
                                             .cloned()
-                                            .chain(std::iter::once(Atom::Number(-1.0)))
+                                            .chain(std::iter::once(Atom::Number(
+                                                BigRational::from_float(-1.0).unwrap(),
+                                            )))
                                             .collect(),
                                     }),
                             )
@@ -237,7 +243,7 @@ fn simplify_equation(equation: &Equation) -> Equation {
                         },
                     }
                 } else {
-                    let amount: f64 = term
+                    let amount: BigRational = term
                         .atoms
                         .iter()
                         .filter_map(|atom| (!atom.contains_variable()).then(|| eval_atom(atom)))
@@ -252,7 +258,7 @@ fn simplify_equation(equation: &Equation) -> Equation {
                         left: Expression {
                             terms: vec![Term { atoms: other_atoms }],
                         },
-                        right: if amount != 1.0 {
+                        right: if amount != BigRational::from_float(1.0).unwrap() {
                             Expression {
                                 terms: vec![Term {
                                     atoms: vec![Atom::Fraction {
@@ -284,7 +290,6 @@ pub fn simplify(equation: &Equation) -> Equation {
         if next == result {
             return result;
         }
-        println!("{}", next);
         result = next;
     }
 }

@@ -2,10 +2,11 @@ use std::{cmp::Ordering, fmt::Display};
 
 use derive_more::IsVariant;
 use enum_as_inner::EnumAsInner;
+use num_rational::BigRational;
 
 #[derive(Clone, PartialEq, Debug, IsVariant, EnumAsInner)]
 pub enum Atom {
-    Number(f64),
+    Number(BigRational),
     Variable(String),
     Group(Expression),
     Fraction {
