@@ -205,7 +205,7 @@ fn simplify_equation(equation: &Equation) -> Equation {
                     },
                 )
             };
-            if left.terms.len() == 1 {
+            let equality = if left.terms.len() == 1 {
                 let term = &left.terms[0];
                 if let Some(fraction) = term.atoms.iter().enumerate().find_map(|(i, atom)| {
                     atom.as_fraction()
@@ -278,6 +278,10 @@ fn simplify_equation(equation: &Equation) -> Equation {
                 }
             } else {
                 Equation::Equality { left, right }
+            };
+            Equation::Equality {
+                left: simplify_expression(equality.as_equality().unwrap().0),
+                right: simplify_expression(equality.as_equality().unwrap().1),
             }
         }
     }

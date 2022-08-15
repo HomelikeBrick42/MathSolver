@@ -179,7 +179,7 @@ impl Display for Expression {
     }
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, IsVariant, EnumAsInner)]
 pub enum Equation {
     Equality { left: Expression, right: Expression },
 }

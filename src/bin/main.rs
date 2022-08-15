@@ -16,15 +16,16 @@ fn main() {
                 ":exit" => break 'main_loop,
                 _ => println!("Unknown command '{line}'"),
             }
-        }
-        let mut lexer = Lexer::new("stdin", &line);
-        match parse_equation(&mut lexer) {
-            Ok(equation) => {
-                println!("{}", equation);
-                println!("{}", simplify(&equation));
-            }
-            Err(error) => {
-                println!("{}", error);
+        } else {
+            let mut lexer = Lexer::new("stdin", &line);
+            match parse_equation(&mut lexer) {
+                Ok(equation) => {
+                    println!("{}", equation);
+                    println!("{}", simplify(&equation));
+                }
+                Err(error) => {
+                    println!("{}", error);
+                }
             }
         }
     }
