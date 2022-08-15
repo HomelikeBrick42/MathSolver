@@ -4,6 +4,24 @@ use derive_more::IsVariant;
 use enum_as_inner::EnumAsInner;
 use num_rational::BigRational;
 
+// modified version of: https://www.reddit.com/r/rust/comments/2saclr/numrational_help/
+fn rational_to_decimal_string(r: &BigRational, max_decimals: usize) -> String {
+    // We get the fractional part. We want to get as many digits as possible from here.
+    let mut fract = r.fract();
+    for _ in 0..max_decimals {
+        if fract.is_integer() {
+            break; // This means we already got all digits available
+        }
+        // By multiplying by 10 we move the digit to the "whole part" of the ratio
+        fract = fract * BigRational::from_integer(10.into());
+    }
+    // to_integer() gives us a representation with the decimal values truncated.
+    // fract contains up to max_decimals of the digits after the decimal value as
+    // the whole (before the value) so printing those values will give us the post
+    // decimal digits
+    format!("{}.{}", r.to_integer(), fract.to_integer())
+}
+
 #[derive(Clone, PartialEq, Debug, IsVariant, EnumAsInner)]
 pub enum Atom {
     Number(BigRational),
@@ -81,7 +99,7 @@ impl PartialOrd for Atom {
 impl Display for Atom {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Atom::Number(value) => write!(f, "{}", value),
+            Atom::Number(value) => write!(f, "{}", rational_to_decimal_string(value, 10)),
             Atom::Variable(name) => write!(f, "{}", name),
             Atom::Group(expression) => write!(f, "({})", expression),
             Atom::Fraction {
