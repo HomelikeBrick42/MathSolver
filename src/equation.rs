@@ -2,6 +2,7 @@ use std::{cmp::Ordering, fmt::Display};
 
 use derive_more::IsVariant;
 use enum_as_inner::EnumAsInner;
+use num_bigint::BigInt;
 use num_rational::BigRational;
 
 // modified version of: https://www.reddit.com/r/rust/comments/2saclr/numrational_help/
@@ -19,7 +20,10 @@ fn rational_to_decimal_string(r: &BigRational, max_decimals: usize) -> String {
     // fract contains up to max_decimals of the digits after the decimal value as
     // the whole (before the value) so printing those values will give us the post
     // decimal digits
-    let decimals = fract.round().to_integer();
+    let mut decimals = fract.round().to_integer();
+    if decimals < 0.into() {
+        decimals *= BigInt::from(-1);
+    }
     if decimals == 0.into() {
         format!("{}", r.to_integer())
     } else {
