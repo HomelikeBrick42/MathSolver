@@ -6,16 +6,26 @@ use crate::SourceSpan;
 
 #[derive(Clone, PartialEq, Debug, Display, EnumAsInner)]
 pub enum TokenKind {
+    #[display(fmt = "EOF")]
     EOF,
+    #[display(fmt = "name")]
     Name,
+    #[display(fmt = "number")]
     Number,
+    #[display(fmt = "(")]
     OpenParenthesis,
+    #[display(fmt = ")")]
     CloseParenthesis,
+    #[display(fmt = "+")]
     Plus,
+    #[display(fmt = "-")]
     Minus,
+    #[display(fmt = "*")]
     Multiply,
+    #[display(fmt = "/")]
     Divide,
-    Equals,
+    #[display(fmt = "=")]
+    Equal,
 }
 
 #[derive(Clone, PartialEq, Debug, EnumAsInner)]

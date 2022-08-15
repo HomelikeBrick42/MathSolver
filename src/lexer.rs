@@ -17,7 +17,7 @@ static SINGLE_CHAR_TOKENS: phf::Map<char, TokenKind> = phf_map! {
     '-' => TokenKind::Minus,
     '*' => TokenKind::Multiply,
     '/' => TokenKind::Divide,
-    '=' => TokenKind::Equals,
+    '=' => TokenKind::Equal,
 };
 
 #[derive(Clone, PartialEq, Debug, Display, IsVariant, EnumAsInner)]

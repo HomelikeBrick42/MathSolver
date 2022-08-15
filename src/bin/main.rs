@@ -11,7 +11,7 @@ fn main() {
                             Term {
                                 atoms: vec![
                                     Atom::Number(BigRational::from_float(909.0).unwrap()),
-                                    Atom::Variable("y".to_string()),
+                                    Atom::Variable("y".into()),
                                 ],
                             },
                             Term {
