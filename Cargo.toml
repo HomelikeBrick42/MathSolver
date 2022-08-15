@@ -8,4 +8,6 @@ edition = "2021"
 [dependencies]
 derive_more = "0.99.17"
 enum-as-inner = "0.5.0"
+num-bigint = "0.4"
 num-rational = "0.4"
+phf = { version = "0.11", features = ["macros"] }

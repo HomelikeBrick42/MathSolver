@@ -13,13 +13,18 @@ fn rational_to_decimal_string(r: &BigRational, max_decimals: usize) -> String {
             break; // This means we already got all digits available
         }
         // By multiplying by 10 we move the digit to the "whole part" of the ratio
-        fract = fract * BigRational::from_integer(10.into());
+        fract *= BigRational::from_integer(10.into());
     }
     // to_integer() gives us a representation with the decimal values truncated.
     // fract contains up to max_decimals of the digits after the decimal value as
     // the whole (before the value) so printing those values will give us the post
     // decimal digits
-    format!("{}.{}", r.to_integer(), fract.to_integer())
+    let decimals = fract.round().to_integer();
+    if decimals == 0.into() {
+        format!("{}", r.to_integer())
+    } else {
+        format!("{}.{}", r.to_integer(), decimals)
+    }
 }
 
 #[derive(Clone, PartialEq, Debug, IsVariant, EnumAsInner)]
