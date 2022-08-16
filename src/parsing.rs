@@ -52,7 +52,12 @@ fn parse_atom(lexer: &mut Lexer) -> Result<Atom, ParsingError> {
 }
 
 fn parse_term(lexer: &mut Lexer) -> Result<Term, ParsingError> {
-    let mut atoms = vec![parse_atom(lexer)?];
+    let mut atoms = vec![];
+    if lexer.peek_token()?.kind == TokenKind::Minus {
+        lexer.next_token()?;
+        atoms.push(Atom::Number(BigRational::from_float(-1.0).unwrap()));
+    }
+    atoms.push(parse_atom(lexer)?);
     while matches!(
         lexer.peek_token()?.kind,
         TokenKind::Multiply | TokenKind::Divide
