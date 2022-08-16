@@ -6,15 +6,21 @@ use num_bigint::BigInt;
 use num_rational::BigRational;
 
 // modified version of: https://www.reddit.com/r/rust/comments/2saclr/numrational_help/
-fn rational_to_decimal_string(r: &BigRational, max_decimals: usize) -> String {
+fn rational_to_decimal_string(r: &BigRational, mut max_decimals: usize) -> String {
     // We get the fractional part. We want to get as many digits as possible from here.
     let mut fract = r.fract();
-    for _ in 0..max_decimals {
+    let mut zeros = 0;
+    while max_decimals > 0 && fract != BigRational::from_integer(0.into()) {
         if fract.is_integer() {
             break; // This means we already got all digits available
         }
         // By multiplying by 10 we move the digit to the "whole part" of the ratio
         fract *= BigRational::from_integer(10.into());
+        if fract.to_integer() != 0.into() {
+            max_decimals -= 1;
+        } else {
+            zeros += 1;
+        }
     }
     // to_integer() gives us a representation with the decimal values truncated.
     // fract contains up to max_decimals of the digits after the decimal value as
@@ -27,7 +33,12 @@ fn rational_to_decimal_string(r: &BigRational, max_decimals: usize) -> String {
     if decimals == 0.into() {
         format!("{}", r.to_integer())
     } else {
-        format!("{}.{}", r.to_integer(), decimals)
+        format!(
+            "{}.{}{}",
+            r.to_integer(),
+            std::iter::repeat('0').take(zeros).collect::<String>(),
+            decimals
+        )
     }
 }
 
