@@ -53,10 +53,30 @@ fn parse_atom(lexer: &mut Lexer) -> Result<Atom, ParsingError> {
 
 fn parse_term(lexer: &mut Lexer) -> Result<Term, ParsingError> {
     let mut atoms = vec![parse_atom(lexer)?];
-    while lexer.peek_token()?.kind == TokenKind::Multiply {
-        let _operator = lexer.next_token()?;
-        let atom = parse_atom(lexer)?;
-        atoms.push(atom);
+    while matches!(
+        lexer.peek_token()?.kind,
+        TokenKind::Multiply | TokenKind::Divide
+    ) {
+        let operator = lexer.next_token()?;
+        match operator.kind {
+            TokenKind::Multiply => {
+                let atom = parse_atom(lexer)?;
+                atoms.push(atom);
+            }
+            TokenKind::Divide => {
+                atoms = vec![Atom::Fraction {
+                    numerator: Expression {
+                        terms: vec![Term { atoms }],
+                    },
+                    denominator: Expression {
+                        terms: vec![Term {
+                            atoms: vec![parse_atom(lexer)?],
+                        }],
+                    },
+                }];
+            }
+            _ => unreachable!(),
+        }
     }
     Ok(Term { atoms })
 }
@@ -75,9 +95,6 @@ fn parse_expression(lexer: &mut Lexer) -> Result<Expression, ParsingError> {
                 term.atoms
                     .push(Atom::Number(BigRational::from_float(-1.0).unwrap()));
                 terms.push(term);
-            }
-            TokenKind::Divide => {
-                todo!();
             }
             _ => unreachable!(),
         }
