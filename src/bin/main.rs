@@ -20,8 +20,14 @@ fn main() {
             let mut lexer = Lexer::new("stdin", &line);
             match parse_equation(&mut lexer) {
                 Ok(equation) => {
-                    println!("{}", equation);
-                    println!("{}", simplify(&equation));
+                    println!("{equation}");
+                    let equation = simplify(&equation);
+                    let (left, right) = equation.as_equality().unwrap();
+                    if !left.contains_variable() && !right.contains_variable() {
+                        println!("{}", eval_expression(left) == eval_expression(right));
+                    } else {
+                        println!("{equation}");
+                    }
                 }
                 Err(error) => {
                     println!("{}", error);
