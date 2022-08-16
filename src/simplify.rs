@@ -207,11 +207,12 @@ fn simplify_equation(equation: &Equation) -> Equation {
             };
             let equality = if left.terms.len() == 1 {
                 let term = &left.terms[0];
-                if let Some(fraction) = term.atoms.iter().enumerate().find_map(|(i, atom)| {
-                    atom.as_fraction()
-                        .map(|(_, denominator)| (!denominator.contains_variable()).then_some(i))
-                        .flatten()
-                }) {
+                if let Some(fraction) = term
+                    .atoms
+                    .iter()
+                    .enumerate()
+                    .find_map(|(i, atom)| atom.as_fraction().map(|_| i))
+                {
                     let mut other_atoms = term.atoms.clone();
                     other_atoms.remove(fraction);
                     Equation::Equality {
